@@ -20,6 +20,10 @@ void HelloTriangleApplication::mainLoop() {
 
 void HelloTriangleApplication::cleanup() {
 
+    glfwDestroyWindow(window_);
+
+    glfwTerminate();
+
 }
 
 void HelloTriangleApplication::initWindow() {
