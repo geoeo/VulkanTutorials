@@ -21,12 +21,18 @@
     <ClCompile Include="HelloTriangleApplication.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="QueueFamilyIndices.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="HelloTriangleApplication.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="ExtensionUtils.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="QueueFamilyIndices.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

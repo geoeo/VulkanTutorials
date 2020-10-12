@@ -10,6 +10,7 @@ namespace Triangle_01 {
 
     public:
         void run();
+        explicit HelloTriangleApplication();
     private:
 
         void initWindow();
@@ -19,7 +20,10 @@ namespace Triangle_01 {
         void createInstance();
         bool checkValidationLayerSupport();
         void setupDebugMessenger();
+        void pickPhysicalDevice();
+        void createLogicalDevice();
         void populateDebugMessengerCreateInfo(VkDebugUtilsMessengerCreateInfoEXT& createInfo);
+        bool isDeviceSuitable(VkPhysicalDevice device);
         std::vector<const char*> getRequiredExtensions();
 
         static VKAPI_ATTR VkBool32 VKAPI_CALL debugCallback(
@@ -30,7 +34,11 @@ namespace Triangle_01 {
 
         GLFWwindow* window_;
         VkInstance vkInstance_;
-        VkDebugUtilsMessengerEXT debugMessenger_;
+        VkDebugUtilsMessengerEXT vkDebugMessenger_;
+        VkPhysicalDevice vkPhysicalDevice_;
+        VkDevice vkDevice_;
+        VkQueue vkGraphicsQueue_;
+
         const uint32_t WIDTH = 800;
         const uint32_t HEIGHT = 600;
         const std::vector<const char*> VK_VALIDATION_LAYERS = {
