@@ -1,7 +1,7 @@
 #pragma once
-
 #include <vulkan/vulkan.hpp>
 #include <GLFW/glfw3.h>
+
 
 
 namespace Triangle_01 {
@@ -22,8 +22,10 @@ namespace Triangle_01 {
         void setupDebugMessenger();
         void pickPhysicalDevice();
         void createLogicalDevice();
+        void createSurface();
         void populateDebugMessengerCreateInfo(VkDebugUtilsMessengerCreateInfoEXT& createInfo);
-        bool isDeviceSuitable(VkPhysicalDevice device);
+        bool isDeviceSuitable(VkPhysicalDevice device, VkSurfaceKHR surface);
+        bool checkDeviceExtensionSupport(VkPhysicalDevice device);
         std::vector<const char*> getRequiredExtensions();
 
         static VKAPI_ATTR VkBool32 VKAPI_CALL debugCallback(
@@ -38,11 +40,16 @@ namespace Triangle_01 {
         VkPhysicalDevice vkPhysicalDevice_;
         VkDevice vkDevice_;
         VkQueue vkGraphicsQueue_;
+        VkQueue vkPresentQueue_;
+        VkSurfaceKHR vkSurface_;
 
         const uint32_t WIDTH = 800;
         const uint32_t HEIGHT = 600;
         const std::vector<const char*> VK_VALIDATION_LAYERS = {
             "VK_LAYER_KHRONOS_validation"
+        };
+        const std::vector<const char*> deviceExtensions = {
+            VK_KHR_SWAPCHAIN_EXTENSION_NAME
         };
 
         #ifdef NDEBUG

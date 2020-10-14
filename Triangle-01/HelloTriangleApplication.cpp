@@ -3,6 +3,7 @@
 #include "ExtensionUtils.hpp"
 
 #include <iostream>
+#include <set>
 
 using namespace Triangle_01;
 
@@ -22,6 +23,7 @@ void HelloTriangleApplication::run() {
 void HelloTriangleApplication::initVulkan() {
     createInstance();
     setupDebugMessenger();
+    createSurface();
     pickPhysicalDevice();
     createLogicalDevice();
 }
@@ -86,6 +88,13 @@ void HelloTriangleApplication::createInstance() {
     VkResult result = vkCreateInstance(&vkCreateInfo, nullptr, &vkInstance_);
     if (result != VK_SUCCESS) {
         throw std::runtime_error("failed to create instance!");
+    }
+
+}
+
+void HelloTriangleApplication::createSurface() {
+    if (glfwCreateWindowSurface(vkInstance_, window_, nullptr, &vkSurface_) != VK_SUCCESS) {
+        throw std::runtime_error("failed to create window surface!");
     }
 
 }
@@ -167,7 +176,7 @@ void HelloTriangleApplication::pickPhysicalDevice() {
     vkEnumeratePhysicalDevices(vkInstance_, &deviceCount, devices.data());
 
     for (const auto& device : devices) {
-        if (isDeviceSuitable(device)) {
+        if (isDeviceSuitable(device, vkSurface_)) {
             vkPhysicalDevice_ = device;
             break;
         }
@@ -180,46 +189,54 @@ void HelloTriangleApplication::pickPhysicalDevice() {
 
 }
 
-bool HelloTriangleApplication::isDeviceSuitable(VkPhysicalDevice device) {
-    QueueFamilyIndices indices = QueueFamilyIndices::findQueueFamilies(device);
-    return indices.isComplete();
+bool HelloTriangleApplication::isDeviceSuitable(VkPhysicalDevice device, VkSurfaceKHR surface) {
+    QueueFamilyIndices indices = QueueFamilyIndices::findQueueFamilies(device, surface);
+    return indices.isComplete() && checkDeviceExtensionSupport(device);
+}
+
+bool HelloTriangleApplication::checkDeviceExtensionSupport(VkPhysicalDevice device) {
+    uint32_t extensionCount;
+    vkEnumerateDeviceExtensionProperties(device, nullptr, &extensionCount, nullptr);
+
+    std::vector<VkExtensionProperties> availableExtensions(extensionCount);
+    vkEnumerateDeviceExtensionProperties(device, nullptr, &extensionCount, availableExtensions.data());
+
+    std::set<std::string> requiredExtensions(deviceExtensions.begin(), deviceExtensions.end());
+
+    for (const auto& extension : availableExtensions) {
+        requiredExtensions.erase(extension.extensionName);
+    }
+
+    return requiredExtensions.empty();
 }
 
 void HelloTriangleApplication::mainLoop() {
 
 }
 
-void HelloTriangleApplication::cleanup() {
-    vkDestroyDevice(vkDevice_, nullptr);
-
-    if (enableValidationLayers) {
-        ExtensionUtils::DestroyDebugUtilsMessengerEXT(vkInstance_, vkDebugMessenger_, nullptr);
-    }
-
-    vkDestroyInstance(vkInstance_, nullptr);
-
-    glfwDestroyWindow(window_);
-
-    glfwTerminate();
-
-}
 
 void HelloTriangleApplication::createLogicalDevice() {
-    QueueFamilyIndices indices = QueueFamilyIndices::findQueueFamilies(vkPhysicalDevice_);
+    QueueFamilyIndices indices = QueueFamilyIndices::findQueueFamilies(vkPhysicalDevice_,vkSurface_);
 
-    VkDeviceQueueCreateInfo queueCreateInfo{};
-    queueCreateInfo.sType = VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO;
-    queueCreateInfo.queueFamilyIndex = indices.graphicsFamily.value();
-    queueCreateInfo.queueCount = 1;
+    std::vector<VkDeviceQueueCreateInfo> queueCreateInfos;
+    std::set<uint32_t> uniqueQueueFamilies = { indices.graphicsFamily.value(), indices.presentFamily.value() };
+
     float queuePriority = 1.0f;
-    queueCreateInfo.pQueuePriorities = &queuePriority;
+    for (uint32_t queueFamily : uniqueQueueFamilies) {
+        auto queueCreateInfo = VkDeviceQueueCreateInfo();
+        queueCreateInfo.sType = VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO;
+        queueCreateInfo.queueFamilyIndex = queueFamily;
+        queueCreateInfo.queueCount = 1;
+        queueCreateInfo.pQueuePriorities = &queuePriority;
+        queueCreateInfos.push_back(queueCreateInfo);
+    }
 
     auto deviceFeatures = VkPhysicalDeviceFeatures();
 
     auto createInfo = VkDeviceCreateInfo();
     createInfo.sType = VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO;
-    createInfo.pQueueCreateInfos = &queueCreateInfo;
-    createInfo.queueCreateInfoCount = 1;
+    createInfo.pQueueCreateInfos = queueCreateInfos.data();
+    createInfo.queueCreateInfoCount = static_cast<uint32_t>(queueCreateInfos.size());
 
     createInfo.pEnabledFeatures = &deviceFeatures;
     createInfo.enabledExtensionCount = 0;
@@ -237,6 +254,7 @@ void HelloTriangleApplication::createLogicalDevice() {
     }
 
     vkGetDeviceQueue(vkDevice_, indices.graphicsFamily.value(), 0, &vkGraphicsQueue_);
+    vkGetDeviceQueue(vkDevice_, indices.presentFamily.value(), 0, &vkPresentQueue_);
 
 }
 
@@ -261,4 +279,22 @@ VKAPI_ATTR VkBool32 VKAPI_CALL HelloTriangleApplication::debugCallback(
 
 	return VK_FALSE;
 }
+
+void HelloTriangleApplication::cleanup() {
+    vkDestroyDevice(vkDevice_, nullptr);
+
+    if (enableValidationLayers) {
+        ExtensionUtils::DestroyDebugUtilsMessengerEXT(vkInstance_, vkDebugMessenger_, nullptr);
+    }
+
+    vkDestroySurfaceKHR(vkInstance_, vkSurface_, nullptr);
+
+    vkDestroyInstance(vkInstance_, nullptr);
+
+    glfwDestroyWindow(window_);
+
+    glfwTerminate();
+
+}
+
 

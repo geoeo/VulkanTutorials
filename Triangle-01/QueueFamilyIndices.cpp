@@ -2,7 +2,7 @@
 
 using namespace Triangle_01;
 
-QueueFamilyIndices QueueFamilyIndices::findQueueFamilies(VkPhysicalDevice device) {
+QueueFamilyIndices QueueFamilyIndices::findQueueFamilies(VkPhysicalDevice device, VkSurfaceKHR surface) {
     auto indices = QueueFamilyIndices();
     
     uint32_t queueFamilyCount = 0;
@@ -12,8 +12,16 @@ QueueFamilyIndices QueueFamilyIndices::findQueueFamilies(VkPhysicalDevice device
 
     int i = 0;
     for (const auto& queueFamily : queueFamilies) {
+        VkBool32 presentSupport = false;
+
+        vkGetPhysicalDeviceSurfaceSupportKHR(device, i, surface, &presentSupport);
+
         if (queueFamily.queueFlags & VK_QUEUE_GRAPHICS_BIT) 
             indices.graphicsFamily = i;
+
+        if (presentSupport) {
+            indices.presentFamily = i;
+        }
         
         if (indices.isComplete())
             break;
@@ -25,5 +33,5 @@ QueueFamilyIndices QueueFamilyIndices::findQueueFamilies(VkPhysicalDevice device
 }
 
 bool QueueFamilyIndices::isComplete() {
-    return graphicsFamily.has_value();
+    return graphicsFamily.has_value() && presentFamily.has_value();
 }
