@@ -146,11 +146,13 @@
     <ClCompile Include="HelloTriangleApplication.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="QueueFamilyIndices.cpp" />
+    <ClCompile Include="SwapChainSupportDetails.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="ExtensionUtils.hpp" />
     <ClInclude Include="HelloTriangleApplication.hpp" />
     <ClInclude Include="QueueFamilyIndices.hpp" />
+    <ClInclude Include="SwapChainSupportDetails.hpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
